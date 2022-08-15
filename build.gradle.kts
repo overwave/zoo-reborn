@@ -4,15 +4,15 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform
 import org.jetbrains.kotlin.utils.addToStdlib.ifTrue
 
-group = "org.openrndr.template"
-version = "0.4.0"
+group = "dev.overwave.zoo"
+version = "0.1.5"
 
-val applicationMainClass = "TemplateProgramKt"
+val applicationMainClass = "dev.overwave.MainKt"
 
 /**  ## additional ORX features to be added to this project */
 val orxFeatures = setOf(
 //  "orx-boofcv",
-  "orx-camera",
+//  "orx-camera",
 //  "orx-chataigne",
     "orx-color",
     "orx-compositor",
@@ -33,11 +33,11 @@ val orxFeatures = setOf(
 //  "orx-keyframer",      
 //  "orx-kinect-v1",
 //  "orx-kotlin-parser",
-  "orx-mesh-generators",
+//  "orx-mesh-generators",
 //  "orx-midi",
 //  "orx-minim",
-  "orx-no-clear",
-    "orx-noise",
+//  "orx-no-clear",
+//    "orx-noise",
 //  "orx-obj-loader",
     "orx-olive",
 //  "orx-osc",
