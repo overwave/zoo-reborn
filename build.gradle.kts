@@ -174,7 +174,11 @@ tasks {
 // ------------------------------------------------------------------------------------------------------------------ //
 
 tasks.register<Zip>("jpackageZip") {
-    archiveFileName.set("openrndr-application.zip")
+    when (OperatingSystem.current()) {
+        OperatingSystem.WINDOWS -> archiveFileName.set("openrndr-application-windows.zip")
+        OperatingSystem.LINUX -> archiveFileName.set("openrndr-application-linux-x64.zip")
+        OperatingSystem.MAC_OS -> archiveFileName.set("openrndr-application-macos.zip")
+    }
     from("$buildDir/jpackage") {
         include("**/*")
     }
