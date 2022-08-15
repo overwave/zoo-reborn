@@ -88,7 +88,7 @@ fun main() {
 
                     drawer.translate(actor.positionDouble.xy0)
 //                    drawer.translate(Vector3(actor.positionDouble.x, actor.positionDouble.y, -15.0))
-//                    drawer.rotate(Vector3(0.0, 0.0, 1.0), 90.0)
+//                    drawer.rotate(Vector3(1.0, 0.0, 1.0), 90.0)
 
 //                    drawer.rotate(Vector3.UNIT_Z, seconds * 15)
 //                    drawer.rotate(Vector3.UNIT_X, seconds * 5)
