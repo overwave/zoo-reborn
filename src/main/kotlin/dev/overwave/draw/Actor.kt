@@ -10,5 +10,7 @@ interface Actor {
     val pivot: Vector2
         get() = positionDouble + size / 2.0
 
+    val hovered: Boolean
+
     val appearance: Appearance
 }

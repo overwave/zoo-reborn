@@ -20,4 +20,6 @@ class Box(private var position: IntVector2, private val type: BoxType) : Actor {
     fun move(distance: IntVector2) {
         position += distance
     }
+
+    override var hovered = false
 }

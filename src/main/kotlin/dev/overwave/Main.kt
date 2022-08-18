@@ -1,28 +1,32 @@
 package dev.overwave
 
 import dev.overwave.game.Field
+import dev.overwave.game.MouseEvent
 import org.openrndr.UnfocusBehaviour
 import org.openrndr.WindowMultisample
 import org.openrndr.application
 import org.openrndr.color.ColorRGBa
 import org.openrndr.draw.*
+import org.openrndr.extras.color.presets.BLUE_STEEL
+import org.openrndr.math.IntVector2
 import org.openrndr.math.Matrix44
 import org.openrndr.math.Vector2
 import org.openrndr.math.Vector3
 import org.openrndr.math.Vector4
+import org.openrndr.math.clamp
 import org.openrndr.math.transforms.lookAt
 import org.openrndr.math.transforms.perspective
+import kotlin.math.roundToInt
 
 class Main {
 }
 
-private const val BOX_SIZE = 64.0
-
 private const val SHADER = """
                         vec3 lightDir = normalize(vec3(0.3, 0.4, 1.5));
                         float light = dot(va_normal, lightDir) * 0.4 + 0.5;
-                        x_fill = texture(p_texture, va_texCoord0.xy);
-                        x_fill.rgb *= light; 
+                        vec4 tex = texture(p_texture, va_texCoord0.xy);
+                        tex.rgb *= light;
+                        x_fill.rgb = mix(tex.rgb, p_color.rgb, p_color.a);
                     """
 
 fun castRay(point: Vector2, projection: Matrix44, view: Matrix44, width: Int, height: Int): Vector3 {
@@ -31,15 +35,17 @@ fun castRay(point: Vector2, projection: Matrix44, view: Matrix44, width: Int, he
     return (view.inversed * ipn).xyz
 }
 
-private const val WIDTH = 1800
-private const val HEIGHT = 1300
+private const val WIDTH = 1200
+private const val HEIGHT = 700
 
 fun main() {
-    val field = Field(8)
     val textures = mutableMapOf<String, ColorBuffer>()
+    // val hoverSubscribers = mutableListOf<Hoverable>()
+    val field = Field(8)
 
 
     application {
+        // hoverSubscribers.add(field)
 
         configure {
             width = WIDTH
@@ -52,15 +58,17 @@ fun main() {
         val cameraPosition = Vector3(4.5, 4.5, 15.0)
         val view = lookAt(cameraPosition, Vector3(4.5, 4.5, 0.0))
         val projection = perspective(60.0, WIDTH.toDouble() / HEIGHT, 0.01, 1000.0)
-        var picker = Vector2(0.0)
 
         program {
             val box = Mesh("data/meshes/box.obj")
 
             mouse.moved.listen {
-                val ray = castRay(it.position, projection, view, WIDTH, HEIGHT)
-                val point = cameraPosition - ray * ((cameraPosition.z - 0.5) / ray.z)
-                picker = point.xy
+                val mouseEvent = getMouseEvent(it, projection, view, cameraPosition)
+                field.mouseMove(mouseEvent)
+            }
+            mouse.buttonUp.listen {
+                val mouseEvent = getMouseEvent(it, projection, view, cameraPosition)
+                field.mouseClick(mouseEvent)
             }
 
 
@@ -69,7 +77,6 @@ fun main() {
                 drawer.view = view
                 drawer.projection = projection
 
-                drawer.fill = ColorRGBa.PINK
                 drawer.depthWrite = true
                 drawer.depthTestPass = DepthTestPass.LESS_OR_EQUAL
 
@@ -83,6 +90,9 @@ fun main() {
                     drawer.shadeStyle = shadeStyle {
                         fragmentTransform = SHADER
                         parameter("texture", texture)
+
+                        val highlightColor = if (actor.hovered) ColorRGBa.BLUE_STEEL(a = 0.3) else ColorRGBa.TRANSPARENT
+                        parameter("color", highlightColor)
                     }
 //                }
 
@@ -95,10 +105,24 @@ fun main() {
                     drawer.vertexBuffer(box.buffer, DrawPrimitive.TRIANGLES)
                 }
 
-                drawer.model = Matrix44.IDENTITY
-                drawer.translate(picker)
-                drawer.vertexBuffer(box.buffer, DrawPrimitive.TRIANGLES)
+                // drawer.model = Matrix44.IDENTITY
+                // drawer.translate(picker)
+                // drawer.vertexBuffer(box.buffer, DrawPrimitive.TRIANGLES)
             }
         }
     }
+}
+
+private fun getMouseEvent(
+    nativeEvent: org.openrndr.MouseEvent,
+    projection: Matrix44,
+    view: Matrix44,
+    cameraPosition: Vector3
+): MouseEvent {
+    val ray = castRay(nativeEvent.position, projection, view, WIDTH, HEIGHT)
+    val point = cameraPosition - ray * ((cameraPosition.z - 0.5) / ray.z)
+
+    val intPosition = IntVector2(point.x.roundToInt(), point.y.roundToInt())
+    val clampedIntPosition = intPosition.clamp(IntVector2(-1, -1), IntVector2(10, 10))
+    return MouseEvent(nativeEvent.position, point.xy, intPosition, clampedIntPosition)
 }

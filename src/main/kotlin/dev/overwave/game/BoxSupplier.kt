@@ -9,7 +9,7 @@ import java.util.stream.Stream
 
 const val BOX_SUPPLIER_QUEUE_SIZE = 10L
 
-class BoxSupplier(private val position: IntVector2, private val direction: IntVector2, private val colors: Int) {
+class BoxSupplier(val position: IntVector2, private val direction: IntVector2, private val colors: Int) {
 
     var shifted = false;
 
@@ -36,7 +36,13 @@ class BoxSupplier(private val position: IntVector2, private val direction: IntVe
             .toList()
     }
 
+    fun hover() {
+        queue.peek().hovered = true
+    }
 
+    fun unhover() {
+        queue.peek().hovered = false
+    }
 }
 
 private fun getRandomBoxType(boundary: Int) = BoxType.values()[ThreadLocalRandom.current().nextInt(boundary)]
