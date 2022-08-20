@@ -38,6 +38,12 @@ fun castRay(point: Vector2, projection: Matrix44, view: Matrix44, width: Int, he
 private const val WIDTH = 1200
 private const val HEIGHT = 700
 
+fun _loadImage(path:String): ColorBuffer {
+    val image = loadImage(path)
+    image.filter(MinifyingFilter.LINEAR_MIPMAP_LINEAR, MagnifyingFilter.LINEAR)
+    return image
+}
+
 fun main() {
     val textures = mutableMapOf<String, ColorBuffer>()
     // val hoverSubscribers = mutableListOf<Hoverable>()
@@ -86,7 +92,7 @@ fun main() {
                     drawer.model = Matrix44.IDENTITY
 
                     val texturePath = actor.appearance.texture.path
-                    val texture = textures.computeIfAbsent(texturePath, ::loadImage)
+                    val texture = textures.computeIfAbsent(texturePath, ::_loadImage)
                     drawer.shadeStyle = shadeStyle {
                         fragmentTransform = SHADER
                         parameter("texture", texture)
