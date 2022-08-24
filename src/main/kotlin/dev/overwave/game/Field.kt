@@ -1,12 +1,12 @@
 package dev.overwave.game
 
 import dev.overwave.draw.Actor
+import dev.overwave.draw.Drawable
 import org.openrndr.math.IntVector2
 
-class Field(colors: Int) : MouseListener {
+class Field(colors: Int) : MouseListener, Drawable {
     private val boxSuppliers: Map<IntVector2, BoxSupplier>
-    private val grid: Grid
-    private val actors: List<Actor>
+    private val grid = Grid()
 
     init {
         val suppliers = mutableListOf<BoxSupplier>()
@@ -17,15 +17,21 @@ class Field(colors: Int) : MouseListener {
             suppliers.add(BoxSupplier(IntVector2(-1, i), IntVector2(1, 0), colors))
         }
         boxSuppliers = suppliers.associateBy(BoxSupplier::position)
-        actors = suppliers.flatMap(BoxSupplier::getActors)
     }
 
-    fun getActors() = boxSuppliers.values.flatMap(BoxSupplier::getActors)
+    override fun getActors(): List<Actor> {
+        val supplierActors = boxSuppliers.values.flatMap(BoxSupplier::getActors)
+        return grid.getActors() + supplierActors
+    }
 
     override fun mouseMove(event: MouseEvent) {
         for (supplier in boxSuppliers.values) {
             if (supplier.position == event.clampedIntPosition) {
-                supplier.hover()
+                if (grid.iterate(supplier.position, supplier.direction) == null) {
+                    supplier.hover(false)
+                } else {
+                    supplier.hover(true)
+                }
             } else {
                 supplier.unhover()
             }
@@ -33,8 +39,23 @@ class Field(colors: Int) : MouseListener {
     }
 
     override fun mouseClick(event: MouseEvent) {
-        val box = boxSuppliers[event.clampedIntPosition]?.retrieve()
-            ?: throw IllegalArgumentException("illegal position")
-        println(box)
+        val supplier = boxSuppliers[event.clampedIntPosition] ?: throw IllegalArgumentException("illegal position")
+
+        val steps = grid.iterate(supplier.position, supplier.direction) ?: return
+
+        val box = supplier.retrieve()
+        box.move(steps, ::makeTurn)
+
+        grid.add(box)
+    }
+
+    private fun makeTurn() {
+        System.err.println("check for combo!")
+        // var allIdle = true
+        // for (cell in grid.cells) {
+        //     if (cell.isBusy()) {
+        //
+        //     }
+        // }
     }
 }

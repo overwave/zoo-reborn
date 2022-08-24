@@ -1,12 +1,9 @@
 package dev.overwave.texture
 
-class Texture(name: String, type: TextureType) {
-    val path = type.toPath(name)
+class Texture(type: TextureType, textureName: String) {
+    val filename = "data/meshes/${type.name.lowercase()}/${textureName.lowercase()}.png"
 }
 
-enum class TextureType(val toPath: (name: String) -> (String)) {
-    BOX({
-        val filename = it.lowercase().replace('_', '-')
-        "data/meshes/box/${filename}_tex.png"
-    })
+enum class TextureType {
+    BOX
 }
