@@ -27,7 +27,8 @@ class Field(colors: Int) : MouseListener, Drawable {
     override fun mouseMove(event: MouseEvent) {
         for (supplier in boxSuppliers.values) {
             if (supplier.position == event.clampedIntPosition) {
-                if (grid.iterate(supplier.position, supplier.direction) == null) {
+                val intersection = grid.findIntersection(supplier.position, supplier.direction) ?: 0
+                if (intersection == 0) {
                     supplier.hover(false)
                 } else {
                     supplier.hover(true)
@@ -39,23 +40,75 @@ class Field(colors: Int) : MouseListener, Drawable {
     }
 
     override fun mouseClick(event: MouseEvent) {
-        val supplier = boxSuppliers[event.clampedIntPosition] ?: throw IllegalArgumentException("illegal position")
-
-        val steps = grid.iterate(supplier.position, supplier.direction) ?: return
+        val supplier = boxSuppliers[event.clampedIntPosition] ?: return
+        val intersection = (grid.findIntersection(supplier.position, supplier.direction)) ?: 0
+        if (intersection == 0) return
 
         val box = supplier.retrieve()
-        box.move(steps, ::makeTurn)
+        box.move(intersection, ::makeTurn)
 
         grid.add(box)
     }
 
+    private fun getNeighbors(cell: Box): List<Box> {
+        return listOfNotNull(
+            grid.getBoxAt(cell.position + IntVector2.UNIT_X),
+            grid.getBoxAt(cell.position + IntVector2.UNIT_Y),
+            grid.getBoxAt(cell.position - IntVector2.UNIT_X),
+            grid.getBoxAt(cell.position - IntVector2.UNIT_Y),
+        ).filter { it.type == cell.type }
+    }
+
     private fun makeTurn() {
-        System.err.println("check for combo!")
-        // var allIdle = true
-        // for (cell in grid.cells) {
-        //     if (cell.isBusy()) {
-        //
-        //     }
-        // }
+        grid.remove(getGroupedBoxes())
+
+        pushNotStaticBoxes()
+    }
+
+    private fun getGroupedBoxes(): Set<Box> {
+        val checkedBoxes = mutableSetOf<Box>()
+        val groupedBoxes = mutableSetOf<Box>()
+
+        for (box in grid.getBoxes()) {
+            if (checkedBoxes.contains(box)) continue
+
+            val currentGroup = mutableSetOf(box)
+            val boxesToCheck = ArrayDeque(listOf(box))
+
+            while (boxesToCheck.isNotEmpty()) {
+                val neighbors = getNeighbors(boxesToCheck.removeLast())
+                for (neighbor in neighbors) {
+                    if (currentGroup.add(neighbor)) {
+                        boxesToCheck.add(neighbor)
+                    }
+                }
+            }
+
+            checkedBoxes.addAll(currentGroup)
+            if (currentGroup.size > 2) {
+                groupedBoxes.addAll(currentGroup)
+            }
+        }
+
+        return groupedBoxes
+    }
+
+    private fun pushNotStaticBoxes() {
+        for ((index, box) in grid.getBoxes().withIndex()) {
+            if (box.static) continue
+
+            val intersection = grid.findIntersection(box.position, box.direction)
+            if (intersection == null) {
+                TODO("push to supplier")
+            } else if (intersection == 0) {
+                continue
+            }
+
+            if (index != grid.getBoxes().size - 1) {
+                box.move(intersection)
+            } else {
+                box.move(intersection, ::makeTurn)
+            }
+        }
     }
 }

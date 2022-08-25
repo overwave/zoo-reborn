@@ -12,7 +12,6 @@ import org.openrndr.draw.DrawPrimitive
 import org.openrndr.draw.MagnifyingFilter
 import org.openrndr.draw.MinifyingFilter
 import org.openrndr.draw.ShadeStyle
-import org.openrndr.draw.loadImage
 import org.openrndr.draw.shadeStyle
 import org.openrndr.math.IntVector2
 import org.openrndr.math.Matrix44
@@ -23,6 +22,7 @@ import org.openrndr.math.clamp
 import org.openrndr.math.transforms.lookAt
 import org.openrndr.math.transforms.perspective
 import kotlin.math.roundToInt
+import org.openrndr.draw.loadImage as openRndrLoadImage
 
 
 private const val SHADER_BEGIN = """
@@ -45,8 +45,8 @@ fun castRay(point: Vector2, projection: Matrix44, view: Matrix44, width: Int, he
 private const val WIDTH = 1200
 private const val HEIGHT = 700
 
-fun _loadImage(path: String): ColorBuffer {
-    val image = loadImage(path)
+fun loadImage(path: String): ColorBuffer {
+    val image = openRndrLoadImage(path)
     image.filter(MinifyingFilter.LINEAR_MIPMAP_LINEAR, MagnifyingFilter.LINEAR)
     return image
 }
@@ -74,7 +74,7 @@ fun main() {
     val textures = mutableMapOf<String, ColorBuffer>()
     val shaders = Array(10, ::compileShader).toList()
 
-    val field = Field(8)
+    val field = Field(3)
 
     application {
 
@@ -101,6 +101,7 @@ fun main() {
             mouse.buttonUp.listen {
                 val mouseEvent = getMouseEvent(it, projection, view, cameraPosition)
                 field.mouseClick(mouseEvent)
+                field.mouseMove(mouseEvent)
             }
 
             extend {
@@ -122,7 +123,7 @@ fun main() {
                     shader.parameter("lightPosition", lightPosition)
 
                     for ((index, texture) in actorTextures.withIndex()) {
-                        val loadedTexture = textures.computeIfAbsent(texture.filename, ::_loadImage)
+                        val loadedTexture = textures.computeIfAbsent(texture.filename, ::loadImage)
                         shader.parameter("texture_$index", loadedTexture)
                     }
                     drawer.shadeStyle = shader
