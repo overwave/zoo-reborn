@@ -12,14 +12,14 @@ const val BOX_SUPPLIER_QUEUE_SIZE = 10L
 
 class BoxSupplier(val position: IntVector2, val direction: IntVector2, private val colors: Int) : Drawable {
 
-    private val queue: Queue<Box> = Stream.iterate(position) { it - direction }
+    private val queue: Deque<Box> = Stream.iterate(position) { it - direction }
         .limit(BOX_SUPPLIER_QUEUE_SIZE)
         .map { it to getRandomBoxType(colors) }
         .map { (pos, type) -> Box(pos, direction, type) }
         .collect(Collectors.toCollection(::LinkedList))
 
     fun retrieve(): Box {
-        val ejectedBox = queue.poll() ?: throw IllegalStateException()
+        val ejectedBox = queue.removeFirst()
 
         hover(true)
         val newBox = Box(position - direction * 10, direction, getRandomBoxType(colors))
@@ -27,6 +27,15 @@ class BoxSupplier(val position: IntVector2, val direction: IntVector2, private v
         queue.forEach(Box::move)
 
         return ejectedBox
+    }
+
+    fun push(box: Box, delay: Int) {
+        queue.removeLast()
+        queue.forEach { it.move(-1, delay = delay) }
+
+        box.reverse()
+        box.unhover()
+        queue.addFirst(box)
     }
 
     override fun getActors(): List<Actor> {

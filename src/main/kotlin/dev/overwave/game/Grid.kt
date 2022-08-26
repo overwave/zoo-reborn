@@ -21,19 +21,23 @@ class Grid : Drawable {
         boxes.add(box)
     }
 
-    fun findIntersection(from: IntVector2, direction: IntVector2): Int? {
-        for (i in 1..10) {
+    fun findIntersection(from: IntVector2, direction: IntVector2): Pair<Boolean, Int> {
+        for (i in 1..11) {
             val position = from + direction * i
             if (position.x > 9 || position.x < 0 || position.y > 9 || position.y < 0) {
-                return null
+                return false to i
             }
 
             val box = getBoxAt(position)
             if (box != null) {
-                return i - 1
+                return if (i == 1) {
+                    false to 0
+                } else {
+                    true to (i - 1)
+                }
             }
         }
-        return null
+        throw IndexOutOfBoundsException()
     }
 
     fun remove(boxes: Collection<Box>) {

@@ -1,9 +1,6 @@
 package dev.overwave.game
 
-import dev.overwave.draw.Actor
-import dev.overwave.draw.Appearance
-import dev.overwave.draw.LinearAnimatable
-import dev.overwave.draw.ofDirection
+import dev.overwave.draw.*
 import dev.overwave.texture.BoxTexture
 import dev.overwave.texture.boxTexture
 import org.openrndr.math.IntVector2
@@ -12,22 +9,25 @@ import java.util.*
 
 class Box(
     position: IntVector2,
-    val direction: IntVector2,
+    direction: IntVector2,
     val type: BoxType,
     val static: Boolean = false
 ) : Actor {
     var position = position
         private set
+    var direction = direction
+        private set
 
-    private var animation: LinearAnimatable<Vector2>? = null
-    private var callback: (() -> Unit)? = null
+    private var animation: Animation = EmptyAnimation()
+//    private var callback: ((Box) -> Unit) = {}
 
     private var clickable = false
 
     override var appearance = updateAppearance()
         private set
 
-    override fun getPosition() = position.vector2 + (animation?.state ?: Vector2.ZERO)
+    //    override fun getPosition() = position.vector2
+    override fun getPosition() = position.vector2 + animation.getState()
 
     override fun getRotation(): Double {
         if (static || !hovered) return 0.0
@@ -47,20 +47,39 @@ class Box(
         private set
 
     override fun update(seconds: Double, deltaTime: Double) {
-        animation?.updateAnimation()
+        animation.update()
 
-        if (animation?.hasAnimations() == false) {
-            callback?.invoke()
-            animation = null
-            callback = null
-        }
+//        checkAnimationEnd()
     }
 
-    fun move(steps: Int = 1, _callback: () -> Unit = {}) {
-        val direction = direction * steps
-        animation = ofDirection(direction)
-        callback = _callback
-        position += direction
+    private fun onAnimationEnd(callback: (Box) -> Unit): () -> Unit {
+        animation = EmptyAnimation()
+//        if (animation.isNotEmpty() && position.y > 11) {
+//            println(position)
+//            println(animation)
+//        }
+//        if (animation.isNotEmpty() && !animation.hasAnimations()) {
+//            println(this)
+        return { callback.invoke(this) }
+//            callback = _callback
+//        }
+    }
+
+    fun move(steps: Int = 1, callback: (Box) -> Unit = {}, delay: Int = 0) {
+//        checkAnimationEnd(_callback)
+
+        val distance = direction * steps
+        animation.update()
+
+        animation += ofDirection(distance, onAnimationEnd(callback), delay)
+//        if (position.y > 12) {
+//            println(animation)
+//        }
+        position += distance
+    }
+
+    fun reverse() {
+        direction *= -1
     }
 
     fun hover(_clickable: Boolean) {
@@ -94,4 +113,6 @@ class Box(
     }
 
     override fun hashCode() = Objects.hash(type, position)
+
+    override fun toString() = "Box [$type] ${position.x} ${position.y}"
 }

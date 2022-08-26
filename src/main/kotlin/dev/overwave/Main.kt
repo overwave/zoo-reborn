@@ -42,8 +42,8 @@ fun castRay(point: Vector2, projection: Matrix44, view: Matrix44, width: Int, he
     return (view.inversed * ipn).xyz
 }
 
-private const val WIDTH = 1200
-private const val HEIGHT = 700
+private const val WIDTH = 1800
+private const val HEIGHT = 1200
 
 fun loadImage(path: String): ColorBuffer {
     val image = openRndrLoadImage(path)
