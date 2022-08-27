@@ -28,15 +28,29 @@ class LinearAnimation(
 //                ::state.complete()
 //            }
             val animationKey = ::state.animate(to, duration * SPEED, Easing.None)
-            animationKey.completed.listen { callback() }
+            animationKey.completed.listen {
+//                try {
+                callback()
+//                } catch (e: Throwable) {
+//                    e.printStackTrace()
+//                }
+            }
+            animationKey.cancelled.listen {
+//                try {
+                callback()
+//                } catch (e: Throwable) {
+//                    e.printStackTrace()
+//                }
+            }
+//            animationKey.cancelled.listen {
+//                System.err.println(it)
+//            }
         }
 //        val animationKey = animation::state.animate(to, duration * SPEED, Easing.None)
 //            animationKey.cancelled.listen { callback() }
     }
 
-    override fun getState(): Vector2 {
-        return animation.state
-    }
+    override fun getState() = animation.state
 
     override fun update() = animation.updateAnimation()
 
@@ -51,6 +65,7 @@ class LinearAnimation(
         val distance = from.distanceTo(to).toInt()
 
         val composedCallback = {
+            System.err.println("nested called")
             callback()
             animation.callback()
         }

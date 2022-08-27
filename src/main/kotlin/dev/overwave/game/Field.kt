@@ -5,20 +5,25 @@ import dev.overwave.draw.Drawable
 import org.openrndr.math.IntVector2
 
 
-class Field(colors: Int) : MouseListener, Drawable {
+class Field(levelIndex: Int) : MouseListener, Drawable {
     private val boxSuppliers: Map<IntVector2, BoxSupplier>
-    private val grid = Grid()
+    private val grid: Grid
     private val movingBoxes = mutableListOf<Box>()
 
+    var cleared = false
+        private set
+
     init {
+        val level = Level(levelIndex)
         val suppliers = mutableListOf<BoxSupplier>()
         for (i in 0..9) {
-            suppliers.add(BoxSupplier(IntVector2(i, -1), IntVector2(0, 1), colors))
-            suppliers.add(BoxSupplier(IntVector2(10, i), IntVector2(-1, 0), colors))
-            suppliers.add(BoxSupplier(IntVector2(i, 10), IntVector2(0, -1), colors))
-            suppliers.add(BoxSupplier(IntVector2(-1, i), IntVector2(1, 0), colors))
+            suppliers.add(BoxSupplier(IntVector2(i, -1), IntVector2(0, 1), level.colors))
+            suppliers.add(BoxSupplier(IntVector2(10, i), IntVector2(-1, 0), level.colors))
+            suppliers.add(BoxSupplier(IntVector2(i, 10), IntVector2(0, -1), level.colors))
+            suppliers.add(BoxSupplier(IntVector2(-1, i), IntVector2(1, 0), level.colors))
         }
         boxSuppliers = suppliers.associateBy(BoxSupplier::position)
+        grid = Grid(level)
     }
 
     override fun getActors(): List<Actor> {
@@ -43,6 +48,13 @@ class Field(colors: Int) : MouseListener, Drawable {
 
     override fun mouseClick(event: MouseEvent) {
         val supplier = boxSuppliers[event.clampedIntPosition] ?: return
+
+        if (movingBoxes.isNotEmpty()) {
+            movingBoxes.forEach(Box::finishAnimation)
+            movingBoxes.clear()
+            makeTurn()
+        }
+
         val (collided, steps) = (grid.findIntersection(supplier.position, supplier.direction))
         if (!collided) return
 
@@ -63,7 +75,6 @@ class Field(colors: Int) : MouseListener, Drawable {
     }
 
     private fun moveEnded(box: Box) {
-        println(movingBoxes)
         movingBoxes.remove(box)
 
         if (movingBoxes.isEmpty()) {
@@ -72,10 +83,13 @@ class Field(colors: Int) : MouseListener, Drawable {
     }
 
     private fun makeTurn() {
-//        println("made turn")
         grid.remove(getGroupedBoxes())
 
         pushNotStaticBoxes()
+
+        if (grid.getBoxes().isEmpty()) {
+            cleared = true
+        }
     }
 
     private fun getGroupedBoxes(): Set<Box> {
@@ -107,7 +121,6 @@ class Field(colors: Int) : MouseListener, Drawable {
     }
 
     private fun pushNotStaticBoxes() {
-//        println("static boxes pushed")
         val boxesToRemove = mutableListOf<Box>()
         if (movingBoxes.isNotEmpty()) throw IllegalStateException("no moving boxes when pushing allowed!")
 
@@ -120,13 +133,12 @@ class Field(colors: Int) : MouseListener, Drawable {
 
             box.move(steps, ::moveEnded)
             if (!collided) {
-//                println("box pushed to a supplier")
-                boxSuppliers[box.position]?.push(box, steps) ?: throw IllegalStateException("accepting supplier not found")
+                boxSuppliers[box.position]?.push(box, steps)
+                    ?: throw IllegalStateException("accepting supplier not found")
                 boxesToRemove.add(box)
             }
             movingBoxes.add(box)
         }
-//        println("removed ${boxesToRemove.size} boxes")
         grid.remove(boxesToRemove)
     }
 }

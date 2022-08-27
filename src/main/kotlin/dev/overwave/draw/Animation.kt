@@ -7,6 +7,8 @@ interface Animation {
 
     fun update()
 
+    fun cancel()
+
     val empty: Boolean
 
     operator fun plus(animation: Animation): Animation

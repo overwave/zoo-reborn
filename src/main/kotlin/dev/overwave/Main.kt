@@ -74,7 +74,8 @@ fun main() {
     val textures = mutableMapOf<String, ColorBuffer>()
     val shaders = Array(10, ::compileShader).toList()
 
-    val field = Field(3)
+    var level = 3
+    var field = Field(level)
 
     application {
 
@@ -105,6 +106,10 @@ fun main() {
             }
 
             extend {
+                if (field.cleared) {
+                    field = Field(++level)
+                }
+
                 drawer.clear(ColorRGBa.WHITE)
                 drawer.view = view
                 drawer.projection = projection

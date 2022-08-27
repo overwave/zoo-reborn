@@ -7,6 +7,8 @@ class EmptyAnimation : Animation {
 
     override fun update() {}
 
+    override fun cancel() {}
+
     override val empty = true
 
     override fun plus(animation: Animation) = animation

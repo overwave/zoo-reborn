@@ -2,9 +2,13 @@ package dev.overwave.game
 
 import dev.overwave.draw.Drawable
 import org.openrndr.math.IntVector2
+import java.util.stream.Collectors
 
-class Grid : Drawable {
-    private val boxes = mutableListOf<Box>(Box(IntVector2(3, 3), IntVector2.ZERO, BoxType.JELLYFISH, static = true))
+class Grid(level: Level) : Drawable {
+    private val boxes : MutableList<Box> = level.boxes.stream()
+        .map { (position, type) ->
+            Box(position, IntVector2.ZERO, type, static = true)
+        }.collect(Collectors.toCollection(::ArrayList))
 
     override fun getActors() = boxes
 

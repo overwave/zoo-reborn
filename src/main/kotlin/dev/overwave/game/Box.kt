@@ -115,4 +115,9 @@ class Box(
     override fun hashCode() = Objects.hash(type, position)
 
     override fun toString() = "Box [$type] ${position.x} ${position.y}"
+
+    fun finishAnimation() {
+        animation.cancel()
+        animation = EmptyAnimation()
+    }
 }

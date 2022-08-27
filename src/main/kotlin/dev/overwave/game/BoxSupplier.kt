@@ -20,11 +20,15 @@ class BoxSupplier(val position: IntVector2, val direction: IntVector2, private v
 
     fun retrieve(): Box {
         val ejectedBox = queue.removeFirst()
+        ejectedBox.finishAnimation()
 
         hover(true)
         val newBox = Box(position - direction * 10, direction, getRandomBoxType(colors))
         queue.add(newBox)
-        queue.forEach(Box::move)
+        queue.forEach {
+            it.finishAnimation()
+            it.move()
+        }
 
         return ejectedBox
     }
